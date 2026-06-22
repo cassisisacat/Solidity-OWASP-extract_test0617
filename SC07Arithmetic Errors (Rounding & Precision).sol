@@ -1,25 +1,10 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
-contract VulnerableShares {
-    uint256 public totalAssets;
-    uint256 public totalShares;
-
-    mapping(address => uint256) public balanceOf;
-
-    function deposit(uint256 assets) external {
-        require(assets > 0, "zero");
-
-        uint256 shares;
-        if (totalShares == 0) {
-            shares = assets;
-        } else {
-            // Rounds down and may favor the depositor under certain edge states
-            shares = (assets * totalShares) / totalAssets;
-        }
-
-        totalAssets += assets;
-        totalShares += shares;
-        balanceOf[msg.sender] += shares;
+// integer-mate/sui/sources/math_u256.move
+// VULNERABLE: incorrect overflow threshold
+public fun checked_shlw(n: u256): (u256, bool) {
+    let mask = 0xFFFFFFFFFFFFFFFF << 192;  // WRONG! Produces wrong threshold
+    if (n > mask) {
+        (0, true)   // Should signal overflow
+    } else {
+        ((n << 64), false)  // Overflow occurs here for n >= 2^192—Move truncates silently
     }
 }
